@@ -6,7 +6,7 @@ pipeline {
         stage('Clone') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/USERNAME/REPO.git'
+                url: 'https://github.com/hassan-maher-dev/Land-Cover-Classification.git'
             }
         }
 
@@ -30,6 +30,7 @@ pipeline {
                 sh '''
                 docker run -d \
                 --name remote-sensing-container \
+                --restart always \
                 -p 5000:5000 \
                 -v /opt/remote-sensing/uploads:/app/uploads \
                 -v /opt/remote-sensing/Outputs:/app/Outputs \
@@ -38,5 +39,21 @@ pipeline {
             }
         }
 
+        stage('Cleanup') {
+            steps {
+                sh 'docker image prune -f'
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful 🚀'
+        }
+
+        failure {
+            echo 'Deployment Failed ❌'
+        }
     }
 }
