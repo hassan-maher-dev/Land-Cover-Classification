@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landsat Land Cover Classification</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🛰️ Landsat Land Cover Classification</h1>
+                <p>Automated Remote Sensing Image Processing Pipeline</p>
+                <p class="subtitle">ECE 435 - Zagazig University | Group 8</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="card">
+                    <h2>📤 Upload Landsat Data</h2>
+                    <p class="info-text">
+                        Download your Landsat 8 scene from USGS Earth Explorer:
+                        <a href="https://earthexplorer.usgs.gov/" target="_blank" class="link">earthexplorer.usgs.gov</a>
+                    </p>
+
+                    <form id="uploadForm" class="upload-form">
+                        <div class="form-section">
+                            <h3>Step 1: Select Spectral Bands</h3>
+                            <p class="form-hint">Upload 7 spectral bands (B1-B7) in order</p>
+                            <p class="form-hint">Fixed study subset is rows 1000–3000 and columns 1000–3000 (2000×2000 pixels). The backend will crop all bands to this region.</p>
+
+                            <div class="band-grid">
+                                <div class="band-input">
+                                    <label>Band 1 (Coastal)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 2 (Blue)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 3 (Green)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 4 (Red)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 5 (NIR)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 6 (SWIR1)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                                <div class="band-input">
+                                    <label>Band 7 (SWIR2)</label>
+                                    <input type="file" name="bands" accept=".TIF,.tif" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Step 1.1: Select Crop Window</h3>
+                            <p class="form-hint">Choose a 2000×2000 pixel subset from your Landsat scene. Example: rows 1000–3000 and columns 1000–3000.</p>
+                            <div class="crop-grid">
+                                <div class="crop-input">
+                                    <label>Row Start</label>
+                                    <input type="number" name="row_start" min="0" placeholder="e.g., 1000" required>
+                                </div>
+                                <div class="crop-input">
+                                    <label>Row End</label>
+                                    <input type="number" name="row_end" min="0" placeholder="e.g., 3000" required>
+                                </div>
+                                <div class="crop-input">
+                                    <label>Column Start</label>
+                                    <input type="number" name="col_start" min="0" placeholder="e.g., 1000" required>
+                                </div>
+                                <div class="crop-input">
+                                    <label>Column End</label>
+                                    <input type="number" name="col_end" min="0" placeholder="e.g., 3000" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h3>Step 2: Upload Metadata</h3>
+                            <p class="form-hint">Select the MTL.txt file from your Landsat download</p>
+                            
+                            <div class="mtl-upload">
+                                <input type="file" name="mtl" accept=".txt" id="mtlInput" required>
+                                <label for="mtlInput" class="file-label">
+                                    <span>📄 Click to select MTL.txt</span>
+                                </label>
+                                <p id="mtlFileName" class="file-name"></p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <span>🚀 Process Image</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section id="progressSection" class="progress-section" style="display: none;">
+                <div class="card">
+                    <h2>⏳ Processing Pipeline</h2>
+                    <div class="progress-steps">
+                        <div class="step">
+                            <div class="step-icon">1</div>
+                            <div class="step-text">
+                                <p class="step-title">Parse Metadata</p>
+                                <p class="step-desc">Extracting calibration coefficients from MTL</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">2</div>
+                            <div class="step-text">
+                                <p class="step-title">Radiometric Calibration</p>
+                                <p class="step-desc">Converting DN → TOA Reflectance</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">3</div>
+                            <div class="step-text">
+                                <p class="step-title">Spectral Indices</p>
+                                <p class="step-desc">Computing NDVI, NDWI, NDBI</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">4</div>
+                            <div class="step-text">
+                                <p class="step-title">Feature Stacking</p>
+                                <p class="step-desc">Combining B1-B7 + 3 indices = 10 features</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">5</div>
+                            <div class="step-text">
+                                <p class="step-title">ML Classification</p>
+                                <p class="step-desc">Applying trained Random Forest model</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <div class="step-icon">6</div>
+                            <div class="step-text">
+                                <p class="step-title">Statistics & Visualization</p>
+                                <p class="step-desc">Computing area coverage and generating map</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">Initializing...</p>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-section" style="display: none;">
+                <div class="card">
+                    <h2>✅ Classification Results</h2>
+                    
+                    <div class="results-grid">
+                        <!-- Classification Map -->
+                        <div class="result-item">
+                            <h3>Classification Map</h3>
+                            <img id="classificationMap" src="" alt="Classification Map" class="result-image">
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="result-item">
+                            <h3>Area Statistics</h3>
+                            <div class="statistics-table">
+                                <table id="statsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Land Cover Class</th>
+                                            <th>Pixel Count</th>
+                                            <th>Area (km²)</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="statsBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Download Button -->
+                    <div class="download-section">
+                        <a id="downloadCSV" href="#" class="btn btn-secondary" download>
+                            📥 Download Statistics (CSV)
+                        </a>
+                    </div>
+
+                    <!-- New Process Button -->
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        🔄 Process Another Image
+                    </button>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section id="errorSection" class="error-section" style="display: none;">
+                <div class="card card-error">
+                    <h2>❌ Error Occurred</h2>
+                    <p id="errorMessage"></p>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        🔄 Try Again
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>ECE 435: Remote Sensing Course Project | Zagazig University 2026 | Batch 8</p>
+            <p>Powered by Python | Flask | Scikit-learn | Rasterio</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

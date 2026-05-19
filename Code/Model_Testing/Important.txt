@@ -1,0 +1,50 @@
+INDEPENDENT IMAGE TESTING & INFERENCE CRITERIA
+===================================================================
+
+This directory contains the independent inference script 'predict_new_image.py'. 
+To ensure successful code execution, avoid shape mismatch crashes, and 
+maintain accurate classification, any new satellite scene MUST strictly 
+comply with the following directory structure and remote sensing prerequisites:
+
+
+1. FILE FORMAT REQUIREMENTS:
+----------------------------
+- The image file format MUST be a standard uncompressed GeoTIFF (.tif or .tiff).
+- Raw binary data files (.dat) are not supported directly without their 
+  corresponding header files (.hdr); exporting as GeoTIFF embedded capsule is mandatory.
+
+2. PRE-PROCESSING PIPELINE MANDATES:
+------------------------------------
+- The input scene cannot contain raw Digital Numbers (DN). It must have completed 
+  the identical pre-processing pipeline executed during model training:
+    a) Absolute Radiometric Calibration.
+    b) Atmospheric Correction (via ENVI FLAASH module) to yield true Surface Reflectance.
+
+3. SPECTRAL BAND STACKING CONFIGURATION (CRITICAL):
+---------------------------------------------------
+The pre-trained machine learning model expects a 10-dimensional input feature matrix. 
+Therefore, the input test image MUST be layer-stacked inside ENVI following this exact operational sequence:
+  - Bands 1 to 7 : Calibrated Atmospheric/Reflectance Spectral Bands (Landsat 8/9)
+  - Band 8        : Normalized Difference Built-Up Index (NDBI)
+  - Band 9        : Normalized Difference Water Index (NDWI)
+  - Band 10       : Normalized Difference Vegetation Index (NDVI)
+
+⚠️ WARNING: Uploading a raw single-band, standard 3-band RGB image, or changing 
+   the sequence of the 10 stacked bands will instantly trigger a reshape/features 
+   dimension mismatch error or output completely corrupted classification colors.
+
+4. FILE PATH & DIRECTORY PLACEMENT:
+-----------------------------------
+- The target test image MUST be placed inside the central 'Data/' folder 
+  located at the project root directory (parallel to the 'Code/' folder).
+  Target Path: [E:\remote sensing\8_ECE435_Project_2026\Data 
+-rename image -> Final_Feature_Stack.tif
+
+
+5. SCRIPT EXECUTION STEPS:
+--------------------------
+1. Open terminal at the project root directory and execute:
+   python Code/Model_Testing/predict_new_image.py
+3. The classified thematic map (.png) and spatial area spreadsheet (.csv) 
+   will be automatically exported to the 'Outputs/' directory.
+===================================================================
