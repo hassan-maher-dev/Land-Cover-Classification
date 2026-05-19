@@ -27,7 +27,7 @@ class Config:
     TIMEOUT_SECONDS = 600  # Processing timeout (10 minutes)
     
     # Model Settings
-    MODEL_PATH = os.path.join(OUTPUT_FOLDER, 'best_model.pkl')
+    MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'Model', 'best_model.pkl')
     
     # Logging
     LOG_LEVEL = 'INFO'

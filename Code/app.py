@@ -518,12 +518,7 @@ def process_image():
 
         print("[STEP 7] Loading model...")
 
-        model_path = app.config.get('MODEL_PATH') or os.path.join(
-            os.path.dirname(__file__),
-            '..',
-            'Outputs',
-            'best_model.pkl'
-        )
+        model_path = app.config.get('MODEL_PATH') or os.path.join(os.path.dirname(__file__), '..', 'Model', 'best_model.pkl')
 
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
